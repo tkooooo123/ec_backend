@@ -14,5 +14,27 @@ export const productService = {
         }
     
         return products as (IProduct & { category: ICategory | null })[];
-      },
+    },
+    getProductById: async (productId: string): Promise<IProduct & { category: ICategory | null }> => { 
+        // 驗證 ID 格式
+        if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
+          throw new HttpError(400, "無效的商品 ID 格式");
+        }
+    
+        // 查詢商品
+        const product = (await Product.findById(productId).populate("category")) as
+          | (IProduct & { category: ICategory })
+          | null;
+    
+        if (!product) {
+          throw new HttpError(404, "找不到該商品");
+        }
+    
+        // 檢查商品是否啟用
+        if (!product.isEnabled) {
+          throw new HttpError(404, "該商品已下架");
+        }
+    
+        return product;
+    },
 }
