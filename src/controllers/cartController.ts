@@ -31,4 +31,26 @@ export const cartController = {
       });
     }
   },
+  getCart: async (req: AuthRequest, res: Response) => {
+    try {
+      // Auth middleware 已經把 userId 放在 req.user.id
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: "未授權" });
+      }
+
+      const data = await cartService.getCart(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: "成功獲取購物車",
+        data
+      });
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "獲取購物車失敗"
+      });
+    }
+  }
 };

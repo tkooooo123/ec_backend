@@ -1,5 +1,5 @@
 import Cart from "../models/Cart";
-import Product from "../models/Product";
+import Product, { IProduct } from "../models/Product";
 import { Types } from "mongoose";
 import { HttpError } from "../utils/HttpError";
 
@@ -48,5 +48,63 @@ export const cartService = {
     });
 
     return updatedCart;
+  },
+  getCart: async (userId: string) => {
+    // 查找用戶購物車
+    const cart = await Cart.findOne({ user: userId }).populate<{ product: IProduct }>({
+      path: "items.product",
+      select: "name image price origin_price quantity unit isEnabled"
+    });
+
+    if (!cart) {
+      // 空購物車
+      return {
+        items: [],
+        totalItems: 0,
+        totalPrice: 0
+      };
+    }
+
+    // 計算統計資訊
+    const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+    // 檢查有效商品
+    const validItems = cart.items.filter((item) => {
+      const product = item.product as unknown as IProduct;
+      return product && product.isEnabled && product.quantity > 0;
+    });
+
+    // 如果有失效商品，更新購物車
+    if (validItems.length !== cart.items.length) {
+      cart.items = validItems;
+      await cart.save();
+    }
+
+    // 轉換 _id 為 id
+    const transformedItems = validItems.map((item) => {
+      const product = item.product as unknown as IProduct;
+      return {
+        product: {
+          id: product._id,
+          name: product.name,
+          image: product.image,
+          quantity: product.quantity,
+          price: product.price,
+          origin_price: product.origin_price,
+          isEnabled: product.isEnabled,
+          unit: product.unit
+        },
+        quantity: item.quantity,
+        price: item.price
+      };
+    });
+
+    return {
+      items: transformedItems,
+      totalItems,
+      totalPrice,
+      itemCount: transformedItems.length
+    };
   }
 };
