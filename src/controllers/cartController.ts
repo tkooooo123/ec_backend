@@ -1,0 +1,34 @@
+import { Request, Response } from "express";
+import { cartService } from "../services/cartService";
+
+interface AuthRequest extends Request {
+  user?: { id: string; role: string };
+}
+
+export const cartController = {
+  addToCart: async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const { productId, quantity = 1 } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "未授權",
+        });
+      }
+
+      const cart = await cartService.addToCart(userId, productId, quantity);
+
+      return res.status(200).json({
+        success: true,
+        message: "商品已成功加入購物車",
+        data: cart,
+      });
+    } catch (err: any) {
+      res.status(err.statusCode || 500).json({
+        message: err.message || "伺服器錯誤，請稍後再試",
+      });
+    }
+  },
+};
