@@ -75,5 +75,28 @@ export const cartController = {
         message: err.message || "變更購物車商品數量失敗"
       });
     }
+  },
+  removeItem: async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: "未授權" });
+      }
+
+      const { productId } = req.body;
+
+      const items = await cartService.removeItem(userId, productId);
+
+      return res.status(200).json({
+        success: true,
+        message: "商品已從購物車移除",
+        data: { items }
+      });
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "刪除購物車商品失敗"
+      });
+    }
   }
 };

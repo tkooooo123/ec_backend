@@ -178,5 +178,54 @@ export const cartService = {
     });
 
     return transformedItems;
+  },
+  removeItem: async (userId: string, productId: string) => {
+    if (!productId) {
+      throw new HttpError(400, "商品 ID 為必填項目");
+    }
+
+    // 查找購物車
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+      throw new HttpError(404, "購物車不存在");
+    }
+
+    // 查找購物車中的商品
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product.toString() === productId
+    );
+    if (itemIndex === -1) {
+      throw new HttpError(404, "購物車中沒有此商品");
+    }
+
+    // 移除該商品
+    cart.items.splice(itemIndex, 1);
+    await cart.save();
+
+    // 回傳更新後的購物車（包含商品詳情）
+    const updatedCart = await Cart.findById(cart._id).populate<{ product: IProduct }>({
+      path: "items.product",
+      select: "name image price origin_price quantity unit isEnabled"
+    });
+
+    const transformedItems = updatedCart?.items.map((item) => {
+      const prod = item.product as unknown as IProduct;
+      return {
+        product: {
+          id: prod._id,
+          name: prod.name,
+          image: prod.image,
+          quantity: prod.quantity,
+          price: prod.price,
+          origin_price: prod.origin_price,
+          isEnabled: prod.isEnabled,
+          unit: prod.unit
+        },
+        quantity: item.quantity,
+        price: item.price
+      };
+    });
+
+    return transformedItems;
   }
 };
