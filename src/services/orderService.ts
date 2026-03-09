@@ -1,8 +1,9 @@
 import Order, { IOrder } from "../models/Order";
 import { IUser } from "../models/User";
-import { IProduct } from "../models/Product";
+import Product, { IProduct } from "../models/Product";
+import Cart from "../models/Cart";
 import { HttpError } from "../utils/HttpError";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 type PopulatedOrder = Omit<IOrder, "user"> & { user: IUser };
 interface OrderDetail {
@@ -77,4 +78,113 @@ export const orderService = {
   
     return result;
   },
+  createOrder: async (
+    userId: string,
+    shipping: any,
+    payment: string
+  ) => {
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+
+      if (
+        !shipping ||
+        !shipping.name ||
+        !shipping.phone ||
+        !shipping.address ||
+        !shipping.email
+      ) {
+        throw new HttpError(400, "收件人資訊不完整");
+      }
+
+      if (!payment) {
+        throw new HttpError(400, "未選擇付款方式");
+      }
+
+      const cart = await Cart.findOne({ user: userId })
+        .populate<{ product: IProduct }>({
+          path: "items.product",
+          select: "price isEnabled quantity name"
+        })
+        .session(session);
+
+      if (!cart || !cart.items.length) {
+        throw new HttpError(400, "購物車沒有商品");
+      }
+
+      let total = 0;
+
+      const orderItems = cart.items.map((item) => {
+        const product = item.product as unknown as IProduct;
+
+        if (!product.isEnabled) {
+          throw new HttpError(400, `商品「${product.name}」已停售`);
+        }
+
+        if (product.quantity !== undefined && product.quantity < item.quantity) {
+          throw new HttpError(400, `商品「${product.name}」庫存不足`);
+        }
+
+        total += item.price * item.quantity;
+
+        return {
+          product: product._id,
+          quantity: item.quantity,
+          price: item.price
+        };
+      });
+
+      // 建立訂單
+      const order = await Order.create(
+        [
+          {
+            user: userId,
+            items: orderItems,
+            total,
+            shipping,
+            payment
+          }
+        ],
+        { session }
+      );
+
+      // 扣庫存
+      for (const item of orderItems) {
+        const updated = await Product.findOneAndUpdate(
+          {
+            _id: item.product,
+            quantity: { $gte: item.quantity }
+          },
+          {
+            $inc: { quantity: -item.quantity }
+          },
+          { new: true, session }
+        );
+
+        if (!updated) {
+          throw new HttpError(400, "商品庫存不足");
+        }
+      }
+
+      // 清空購物車
+      cart.items = [];
+      await cart.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return {
+        orderId: order[0]._id
+      };
+
+    } catch (error) {
+
+      await session.abortTransaction();
+      session.endSession();
+
+      throw error;
+    }
+  }
 };

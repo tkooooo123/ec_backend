@@ -71,6 +71,37 @@ export const orderController = {
         message: err.message || "伺服器錯誤，請稍後再試",
       });
     }
+  },
+  createOrder: async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.id;
 
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "未授權"
+        });
+      }
+
+      const { shipping, payment } = req.body;
+
+      const data = await orderService.createOrder(
+        userId,
+        shipping,
+        payment
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "訂單建立成功",
+        data
+      });
+
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "建立訂單失敗"
+      });
+    }
   }
 };
