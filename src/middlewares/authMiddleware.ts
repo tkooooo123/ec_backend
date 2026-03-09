@@ -26,3 +26,36 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     res.status(err.statusCode || 401).json({ message: err.message || "未授權" });
   }
 };
+
+export const adminAuth = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new HttpError(401, "未提供 token");
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, config.jwtSecret!) as JwtPayload;
+
+    if (decoded.role !== "admin") {
+      throw new HttpError(403, "需要管理員權限");
+    }
+
+    req.user = {
+      id: decoded.id,
+      role: decoded.role
+    };
+
+    next();
+  } catch (err: any) {
+    res.status(err.statusCode || 401).json({
+      message: err.message || "未授權"
+    });
+  }
+};
