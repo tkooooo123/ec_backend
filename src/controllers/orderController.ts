@@ -50,4 +50,27 @@ export const orderController = {
       });
     }
   },
+  getOrder: async(req: AuthRequest, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "缺少訂單 ID"
+        });
+      }
+      const order = await orderService.getOrderById(id);
+  
+      res.status(200).json({
+        success: true,
+        message: "取得成功!",
+        data: order
+      });
+    } catch (err: any) {
+      res.status(err.statusCode || 500).json({
+        message: err.message || "伺服器錯誤，請稍後再試",
+      });
+    }
+
+  }
 };
