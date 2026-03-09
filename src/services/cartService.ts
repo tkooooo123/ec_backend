@@ -227,5 +227,21 @@ export const cartService = {
     });
 
     return transformedItems;
+  },
+  clearCart: async (userId: string) => {
+    const cart = await Cart.findOne({ user: userId });
+
+    if (!cart) {
+      return {
+        items: []
+      };
+    }
+
+    cart.items = [];
+    await cart.save();
+
+    return {
+      items: []
+    };
   }
 };

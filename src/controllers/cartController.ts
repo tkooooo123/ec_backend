@@ -98,5 +98,31 @@ export const cartController = {
         message: err.message || "刪除購物車商品失敗"
       });
     }
+  },
+  clearCart: async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "未授權"
+        });
+      }
+
+      const data = await cartService.clearCart(userId);
+
+      return res.json({
+        success: true,
+        message: "購物車已清空",
+        data
+      });
+
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "清空購物車失敗"
+      });
+    }
   }
 };
