@@ -63,5 +63,18 @@ export const categoryService = {
       }
   
       return category;
+    },
+    deleteCategory: async (id: string) => {
+
+      if (!id) {
+        throw new HttpError(400, "請提供分類 ID");
+      }
+  
+      const category = await Category.findByIdAndDelete(id);
+  
+      if (!category) {
+        throw new HttpError(404, "找不到分類");
+      }
+  
     }
 }

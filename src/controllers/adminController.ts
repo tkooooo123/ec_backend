@@ -57,5 +57,26 @@ export const adminController = {
           });
     
         }
+      },
+      deleteCategory: async (req: AuthRequest, res: Response) => {
+        try {
+    
+          const id = req.params.id as string;
+    
+          await categoryService.deleteCategory(id);
+    
+          return res.status(200).json({
+            success: true,
+            message: "刪除成功!"
+          });
+    
+        } catch (err: any) {
+    
+          return res.status(err.statusCode || 500).json({
+            success: false,
+            message: err.message || "伺服器錯誤"
+          });
+    
+        }
       }
 }
