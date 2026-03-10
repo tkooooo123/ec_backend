@@ -15,5 +15,6 @@ export const categoryController = {
             message: err.message
           });
         }
-      },
+    },
+    
 }
