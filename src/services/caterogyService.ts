@@ -33,5 +33,35 @@ export const categoryService = {
       });
   
       return category;
+    },
+    updateCategory: async (
+      id: string,
+      name: string,
+      description: string
+    ) => {
+  
+      if (!id) {
+        throw new HttpError(400, "請提供分類 ID");
+      }
+  
+      if (!name) {
+        throw new HttpError(400, "請輸入分類名稱");
+      }
+  
+      if (!description) {
+        throw new HttpError(400, "請輸入分類描述");
+      }
+  
+      const category = await Category.findByIdAndUpdate(
+        id,
+        { name, description },
+        { new: true }
+      );
+  
+      if (!category) {
+        throw new HttpError(404, "找不到分類");
+      }
+  
+      return category;
     }
 }

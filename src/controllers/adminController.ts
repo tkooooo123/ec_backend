@@ -32,5 +32,30 @@ export const adminController = {
             message: err.message || "伺服器錯誤"
           });
         }
+    },
+    updateCategory: async (req: AuthRequest, res: Response) => {
+        try {
+    
+          const { id, name, description } = req.body;
+    
+          await categoryService.updateCategory(
+            id,
+            name,
+            description
+          );
+    
+          return res.status(200).json({
+            success: true,
+            message: "更新成功!"
+          });
+    
+        } catch (err: any) {
+    
+          return res.status(err.statusCode || 500).json({
+            success: false,
+            message: err.message || "伺服器錯誤"
+          });
+    
+        }
       }
 }

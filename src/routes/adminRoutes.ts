@@ -4,7 +4,8 @@ import { adminAuth } from "../middlewares/authMiddleware";
 
 const router = Router();
 
-router.get("/categories", adminAuth,adminController.getCategories)
-router.post("/category", adminAuth, adminController.createCategory)
+router.get("/categories", adminAuth, adminController.getCategories);
+router.post("/category", adminAuth, adminController.createCategory);
+router.put("/category", adminAuth, adminController.updateCategory);
 
 export default router;
