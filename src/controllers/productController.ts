@@ -86,5 +86,57 @@ export const productController = {
           });
     
         }
+      },
+      createProduct: async (req: Request, res: Response) => {
+        try {
+          const {
+            name,
+            price,
+            origin_price,
+            category,
+            image,
+            description,
+            quantity,
+            isEnabled,
+            content,
+            images,
+            unit,
+            is_hottest,
+            is_newest,
+            notice,
+            material,
+            size,
+            style
+          } = req.body;
+    
+          // 參數驗證
+          if (!name || price === undefined || !category || !image || !description || quantity === undefined || typeof isEnabled !== "boolean" || !content || !unit) {
+            return res.status(400).json({ message: "缺少必要欄位" });
+          }
+    
+          const product = await productService.createProduct({
+            name,
+            price,
+            origin_price,
+            category,
+            image,
+            description,
+            quantity,
+            isEnabled,
+            content,
+            images: images || [],
+            unit,
+            is_hottest,
+            is_newest,
+            notice,
+            material,
+            size,
+            style
+          });
+    
+          return res.status(201).json({ message: "新增成功!", product });
+        } catch (err: any) {
+          return res.status(500).json({ message: err.message || "伺服器錯誤" });
+        }
       }
 }
