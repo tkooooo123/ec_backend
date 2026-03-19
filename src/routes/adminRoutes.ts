@@ -9,6 +9,7 @@ router.get("/categories", adminAuth, adminController.getCategories);
 router.post("/category", adminAuth, adminController.createCategory);
 router.put("/category", adminAuth, adminController.updateCategory);
 router.delete("/category/:id", adminAuth, adminController.deleteCategory);
+router.post("/product", adminAuth, productController.createProduct);
 router.delete("/product", adminAuth, productController.deleteProduct);
 
 export default router;
