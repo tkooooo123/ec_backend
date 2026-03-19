@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { productService } from "../services/productService";
 
+interface AuthRequest extends Request {
+  user?: { id: string; role: string };
+}
+
 export const productController = {
     getProducts: async (_req: Request, res: Response) => {
         try {
@@ -62,4 +66,25 @@ export const productController = {
           });
         }
       },
+      deleteProduct: async (req: AuthRequest, res: Response) => {
+        try {
+    
+          const { id } = req.body;
+    
+          await productService.deleteProduct(id);
+    
+          return res.status(200).json({
+            success: true,
+            message: "刪除成功!"
+          });
+    
+        } catch (err: any) {
+    
+          return res.status(err.statusCode || 500).json({
+            success: false,
+            message: err.message || "伺服器錯誤"
+          });
+    
+        }
+      }
 }

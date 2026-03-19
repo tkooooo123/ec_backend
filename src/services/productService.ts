@@ -37,4 +37,17 @@ export const productService = {
     
         return product;
     },
+    deleteProduct: async (id: string) => {
+
+      if (!id) {
+        throw new HttpError(400, "缺少產品 ID");
+      }
+  
+      const deleted = await Product.findByIdAndDelete(id);
+  
+      if (!deleted) {
+        throw new HttpError(404, "找不到該產品");
+      }
+  
+    }
 }
