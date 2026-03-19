@@ -74,21 +74,10 @@ export const productService = {
     }
   },
   createProduct: async (data: CreateProductDTO) => {
-    // 單圖上傳
-    const mainImageUrl = await cloudinaryService.uploadSingle(data.image);
-
-    // 多圖上傳
-    const imagesUrl =
-      data.images && data.images.length
-        ? await cloudinaryService.uploadMultiple(data.images)
-        : [];
-
-        const product = await Product.create({
-          ...data,
-          category: new Types.ObjectId(data.category),
-          image: mainImageUrl ||'',
-          imagesUrl: imagesUrl || []
-        });
+    const product = await Product.create({
+      ...data,
+      category: new Types.ObjectId(data.category),
+    });
 
     return product;
   },
